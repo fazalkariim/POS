@@ -10,7 +10,7 @@ import billRoutes from "./routes/billRoutes.js";
 
 dotenv.config();
 connectDB();
-
+ 
 const app = express();
 
 app.use(cors());

@@ -57,6 +57,7 @@ const Bills = () => {
                 <h2 className="text-lg font-semibold">
                   Table #{bill.tableNo}
                 </h2>
+                
                   <div className="text-right">
                 <p className="text-xs">
                   {new Date(bill.createdAt).toLocaleDateString()}

@@ -32,7 +32,7 @@ export const updateItem = async (req, res) => {
   const item = await Item.findByIdAndUpdate(
     req.params.id,
     { name, price },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   res.json(item);

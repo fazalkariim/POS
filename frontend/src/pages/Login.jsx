@@ -2,82 +2,189 @@ import { useState, useContext } from "react";
 import API from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect } from "react";
 
 const Login = () => {
-  const [form, setForm] = useState({ name: "", password: "" });
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    password: "",
+  });
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
   const [loading, setLoading] = useState(false);
 
   const { login } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
-    setLoading(true);
-
     try {
-      const { data } = await API.post("/auth/login", form);
+      setLoading(true);
 
-      login(data);
+      const cleanForm = {
+        name: form.name.trim(),
+        password: form.password.trim(),
+      };
+
+      const { data } = await API.post(
+        "/auth/login",
+        cleanForm
+      );
+
+    login(data);
+
+    navigate(data.role === "admin" ? "/admin/menu" : "/cashier/menu", {
+      replace: true,
+    });
+
+      toast.success("Login Successful");
 
       if (data.role === "admin") {
-        navigate("/admin/menu");
+        navigate("/admin/menu", {
+          replace: true,
+        });
       } else {
-        navigate("/cashier/menu");
+        navigate("/cashier/menu", {
+          replace: true,
+        });
       }
 
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Something went wrong"
+      toast.error(
+        err.response?.data?.message ||
+          "Login Failed"
       );
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+
+  if (user?.role === "admin") {
+    navigate("/admin/menu", { replace: true });
+  }
+
+  if (user?.role === "cashier") {
+    navigate("/cashier/menu", { replace: true });
+  }
+
+}, [user]);
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-900">
+    <div className="min-h-screen bg-black flex items-center justify-center px-4">
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 w-80 rounded"
-      >
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
 
-        <h2 className="text-xl font-bold mb-4">Login</h2>
+        {/* HEADER */}
+        <div className="text-center mb-8">
 
-        {/* ERROR MESSAGE */}
-        {error && (
-          <p className="bg-red-100 text-red-600 p-2 mb-2 text-sm">
-            {error}
+          <h1 className="text-3xl font-extrabold text-black">
+            POS SYSTEM
+          </h1>
+
+          <p className="text-gray-500 text-sm mt-2">
+            Login to continue
           </p>
-        )}
 
-        <input
-          className="border p-2 w-full mb-2"
-          placeholder="Name"
-          onChange={(e) =>
-            setForm({ ...form, name: e.target.value })
-          }
-        />
+        </div>
 
-        <input
-          type="password"
-          className="border p-2 w-full mb-3"
-          placeholder="Password"
-          onChange={(e) =>
-            setForm({ ...form, password: e.target.value })
-          }
-        />
-
-        <button
-          disabled={loading}
-          className="bg-black text-white w-full py-2"
+        {/* FORM */}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5"
         >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+
+          {/* USERNAME */}
+          <div>
+
+            <label className="text-sm font-medium text-gray-700">
+              Username
+            </label>
+
+            <input
+              type="text"
+              required
+              placeholder="Enter username"
+              value={form.name}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  name: e.target.value,
+                })
+              }
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 mt-1 outline-none focus:ring-2 focus:ring-black"
+            />
+
+          </div>
+
+          {/* PASSWORD */}
+          <div>
+
+            <label className="text-sm font-medium text-gray-700">
+              Password
+            </label>
+
+            <div className="relative">
+
+              <input
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                required
+                placeholder="Enter password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    password:
+                      e.target.value,
+                  })
+                }
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 mt-1 pr-12 outline-none focus:ring-2 focus:ring-black"
+              />
+
+              {/* EYE ICON */}
+              <button
+                type="button"
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+              >
+                {showPassword ? (
+                  <EyeOff size={20} />
+                ) : (
+                  <Eye size={20} />
+                )}
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* BUTTON */}
+          <button
+            disabled={loading}
+            className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-900 transition-all"
+          >
+            {loading
+              ? "Logging in..."
+              : "Login"}
+          </button>
+
+        </form>
+
+      </div>
 
     </div>
   );

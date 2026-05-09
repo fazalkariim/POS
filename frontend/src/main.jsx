@@ -6,25 +6,21 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
+  <>
 
-    {/* <Toaster
+    <Toaster
       position="bottom-center"
       reverseOrder={false}
-    /> */}
-     <Toaster
-  position="bottom-center"
-  reverseOrder={false}
-  toastOptions={{
-    duration: 1500,
-    style: {
-      fontSize: "14px",
-      padding: "12px 16px",
-    },
-  }}
-/>
+      toastOptions={{
+        duration: 1500,
+        style: {
+          fontSize: "14px",
+          padding: "12px 16px",
+        },
+      }}
+    />
 
     <App />
 
-  </React.StrictMode>
+  </>
 );

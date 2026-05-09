@@ -25,7 +25,7 @@ export const updateCategory = async (req, res) => {
   const updated = await Category.findByIdAndUpdate(
     req.params.id,
     { name },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   res.json(updated);
