@@ -7,22 +7,24 @@ export const createBill = async (req, res) => {
     console.log("BODY:", req.body);
     console.log("USER:", req.user);
 
-   const {
+  const {
   tableNo,
   items,
   subtotal,
   taxPercentage,
   taxAmount,
   totalAmount,
+  paymentMethod,
 } = req.body;
 
-    const bill = await Bill.create({
+  const bill = await Bill.create({
   tableNo,
   items,
   subtotal,
   taxPercentage,
   taxAmount,
   totalAmount,
+  paymentMethod,
   createdBy: req.user?._id || null,
 });
 

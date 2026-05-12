@@ -5,8 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const Menu = () => {
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] =
-    useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
@@ -14,8 +13,9 @@ const Menu = () => {
   const [cart, setCart] = useState([]);
   const [tableNo, setTableNo] = useState("");
 
-  const [taxPercentage, setTaxPercentage] =
-  useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [cashTax, setCashTax] = useState(0);
+  const [cardTax, setCardTax] =useState(0);
 
   const navigate = useNavigate();
 
@@ -128,12 +128,20 @@ const Menu = () => {
   0
 );
 
+
+
+const appliedTax =
+  paymentMethod === "Cash"
+    ? cashTax
+    : cardTax;
+
 const taxAmount =
-  (subtotal * Number(taxPercentage)) /
+  (subtotal * Number(appliedTax)) /
   100;
 
 const total =
   subtotal + taxAmount;
+
 
 
   const fetchTax = async () => {
@@ -142,9 +150,8 @@ const total =
     const { data } =
       await API.get("/settings");
 
-    setTaxPercentage(
-      data.taxPercentage || 0
-    );
+    setCashTax(data.cashTax || 0);
+    setCardTax(data.cardTax || 0);
 
   } catch (error) {
     console.log(error);
@@ -174,7 +181,8 @@ const total =
             tableNo: Number(tableNo),
             items: cart,
             subtotal,
-            taxPercentage,
+            taxPercentage: appliedTax,
+            paymentMethod,
             taxAmount,
             totalAmount: total,
           }
@@ -314,20 +322,7 @@ const total =
                       {item.name}
                     </h2>
 
-                    {/* <p className="text-[11px] text-gray-400 mt-1">
-                      Menu Item
-                    </p> */}
-
                   </div>
-
-                  {/* <div className="w-8 h-8 bg-black text-white flex items-center justify-center text-xs font-bold">
-
-                    {item.name
-                      ?.charAt(0)
-                      ?.toUpperCase()}
-
-                  </div> */}
-
                 </div>
 
               </div>
@@ -348,12 +343,6 @@ const total =
                     </span>
 
                   </div>
-
-                  {/* <div className="w-9 h-9 bg-green-100 flex items-center justify-center">
-
-                    <div className="w-2 h-2 bg-green-600"></div>
-
-                  </div> */}
 
                 </div>
 
@@ -377,167 +366,152 @@ const total =
 
     </div>
 
+
+
+
+
     {/* RIGHT SIDE */}
     <div className="w-[32%] bg-white border border-gray-200 shadow-sm p-5 h-fit sticky top-4">
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between mb-5">
+  {/* HEADER */}
+  <div className="flex items-center justify-between mb-5">
+    <div>
+      <h2 className="text-[22px] font-black text-black">
+        Cart Summary
+      </h2>
 
-        <div>
+      <p className="text-xs text-gray-400 mt-1">
+        {cart.length} items added
+      </p>
+    </div>
 
-          <h2 className="text-[22px] font-black text-black">
-            Cart Summary
-          </h2>
+    <div className="w-9 h-9 bg-black text-white flex items-center justify-center text-sm font-bold">
+      {cart.length}
+    </div>
+  </div>
 
-          <p className="text-xs text-gray-400 mt-1">
-            {cart.length} items added
-          </p>
+  {/* TABLE + PAYMENT */}
+  <div className="flex gap-3 mb-5">
 
-        </div>
+    <input
+      type="text"
+      placeholder="Table No"
+      className="w-1/2 h-[38px] px-3 border border-gray-300 bg-white text-xs font-medium outline-none hover:border-black focus:border-black transition-all"
+      value={tableNo}
+      onChange={(e) => setTableNo(e.target.value)}
+    />
 
-        <div className="w-9 h-9 bg-black text-white flex items-center justify-center text-sm font-bold">
-
-          {cart.length}
-
-        </div>
-
-      </div>
-
-      {/* TABLE */}
-      <input
-        type="number"
-        placeholder="Table No"
-        className="w-full h-[42px] px-4 border border-gray-300 bg-white text-sm font-medium outline-none hover:border-black focus:border-black transition-all mb-5"
-        value={tableNo}
-        onChange={(e) =>
-          setTableNo(e.target.value)
-        }
-      />
-
-      {/* CART ITEMS */}
-      <div className="space-y-2 max-h-[320px] overflow-y-auto">
-
-        {cart.length === 0 ? (
-
-          <div className="text-center py-10">
-
-            <p className="text-sm text-gray-400">
-              No items in cart
-            </p>
-
-          </div>
-
-        ) : (
-
-          cart.map((item) => (
-
-            <div
-              key={item._id}
-              className="border border-gray-200 p-3"
-            >
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <h3 className="text-sm font-semibold text-black">
-                    {item.name}
-                  </h3>
-
-                  <p className="text-xs text-gray-400 mt-1">
-                    Rs {item.price}
-                  </p>
-
-                </div>
-
-                {/* QTY */}
-                <div className="flex items-center gap-2">
-
-                  <button
-                    onClick={() =>
-                      decreaseQty(item._id)
-                    }
-                    className="w-7 h-7 border border-gray-300 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all"
-                  >
-                    −
-                  </button>
-
-                  <span className="text-sm font-bold w-5 text-center">
-                    {item.quantity}
-                  </span>
-
-                  <button
-                    onClick={() =>
-                      addToCart(item)
-                    }
-                    className="w-7 h-7 border border-gray-300 hover:bg-black hover:text-white hover:border-black transition-all"
-                  >
-                    +
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-          ))
-        )}
-
-      </div>
-
-      {/* TOTAL */}
-      <div className="mt-5 pt-4 border-t border-gray-200 space-y-2">
-
-  {/* SUBTOTAL */}
-  <div className="flex items-center justify-between">
-
-    <span className="text-sm text-gray-500">
-      Subtotal
-    </span>
-
-    <span className="text-sm font-semibold">
-      Rs {subtotal.toFixed(2)}
-    </span>
+    <select
+      value={paymentMethod}
+      onChange={(e) => setPaymentMethod(e.target.value)}
+      className="w-1/2 h-[38px] px-1 border border-gray-300 bg-white text-xs font-medium outline-none hover:border-black focus:border-black transition-all"
+    >
+      <option value="Cash">💵 Cash Payment</option>
+      <option value="Card">💳 Card Payment</option>
+    </select>
 
   </div>
 
-  {/* TAX */}
-  <div className="flex items-center justify-between">
+  {/* CART ITEMS */}
+  <div className="space-y-2 max-h-[320px] overflow-y-auto">
+    {cart.length === 0 ? (
+      <div className="text-center py-10">
+        <p className="text-sm text-gray-400">
+          No items in cart
+        </p>
+      </div>
+    ) : (
+      cart.map((item) => (
+        <div
+          key={item._id}
+          className="border border-gray-200 p-3"
+        >
+          <div className="flex items-center justify-between">
 
-    <span className="text-sm text-gray-500">
-      Tax ({taxPercentage}%)
-    </span>
+            <div>
+              <h3 className="text-sm font-semibold text-black">
+                {item.name}
+              </h3>
 
-    <span className="text-sm font-semibold">
-      Rs {taxAmount.toFixed(2)}
-    </span>
+              <p className="text-xs text-gray-400 mt-1">
+                Rs {item.price}
+              </p>
+            </div>
 
+            {/* QTY */}
+            <div className="flex items-center gap-2">
+
+              <button
+                onClick={() => decreaseQty(item._id)}
+                className="w-7 h-7 border border-gray-300 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all"
+              >
+                −
+              </button>
+
+              <span className="text-sm font-bold w-5 text-center">
+                {item.quantity}
+              </span>
+
+              <button
+                onClick={() => addToCart(item)}
+                className="w-7 h-7 border border-gray-300 hover:bg-black hover:text-white hover:border-black transition-all"
+              >
+                +
+              </button>
+
+            </div>
+          </div>
+        </div>
+      ))
+    )}
   </div>
 
   {/* TOTAL */}
-  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+  <div className="mt-5 pt-4 border-t border-gray-200 space-y-2">
 
-    <span className="text-sm font-medium text-gray-500">
-      Grand Total
-    </span>
+    {/* SUBTOTAL */}
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-500">
+        Subtotal
+      </span>
 
-    <span className="text-[26px] font-medium text-black">
-      Rs {total.toFixed(2)}
-    </span>
+      <span className="text-sm font-semibold">
+        Rs {subtotal.toFixed(2)}
+      </span>
+    </div>
 
+    {/* TAX */}
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-500">
+        Tax ({appliedTax}%)
+      </span>
+
+      <span className="text-sm font-semibold">
+        Rs {taxAmount.toFixed(2)}
+      </span>
+    </div>
+
+    {/* TOTAL */}
+    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+      <span className="text-sm font-medium text-gray-500">
+        Grand Total
+      </span>
+
+      <span className="text-[26px] font-medium text-black">
+        Rs {total.toFixed(2)}
+      </span>
+    </div>
   </div>
 
+  {/* BUTTON */}
+  <button
+    onClick={generateBill}
+    className="w-full h-[44px] mt-5 bg-black text-white text-sm font-semibold hover:bg-gray-900 transition-all"
+  >
+    Generate Bill
+  </button>
+
 </div>
-
-      {/* BUTTON */}
-      <button
-        onClick={generateBill}
-        className="w-full h-[44px] mt-5 bg-black text-white text-sm font-semibold hover:bg-gray-900 transition-all"
-      >
-        Generate Bill
-      </button>
-
-    </div>
 
   </div>
 );

@@ -6,7 +6,9 @@ import autoTable from "jspdf-autotable";
 const AdminBills = () => {
   const [bills, setBills] = useState([]);
   const [filter, setFilter] = useState("daily");
-  const [tax, setTax] = useState(0);
+
+  const [cashTax, setCashTax] = useState(0);
+  const [cardTax, setCardTax] =useState(0);
 
   // FETCH BILLS
   const fetchBills = async () => {
@@ -24,7 +26,8 @@ const AdminBills = () => {
     const { data } =
       await API.get("/settings");
 
-    setTax(data.taxPercentage || 0);
+    setCashTax(data.cashTax || 0);
+    setCardTax(data.cardTax || 0);
 
   } catch (error) {
     console.log(error);
@@ -118,11 +121,13 @@ const AdminBills = () => {
       ),
     0
   );
+
   const saveTax = async () => {
   try {
 
-    await API.put("/settings", {
-      taxPercentage: tax,
+   await API.put("/settings", {
+      cashTax,
+      cardTax,
     });
 
     alert("Tax Updated");
@@ -209,325 +214,370 @@ const AdminBills = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#eef1f5] p-4">
+  <div className="min-h-screen bg-[#eef1f5] p-4">
 
-      {/* HEADER */}
-      <div className="bg-white/90 backdrop-blur-md border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] px-5 py-4 mb-4">
+    {/* HEADER */}
+    <div className="bg-white/90 backdrop-blur-md border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] px-5 py-4 mb-4">
 
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-          {/* LEFT */}
-          <div>
+        {/* LEFT */}
+        <div>
 
-            <h1 className="text-[26px] font-black tracking-tight text-gray-900">
-              Admin Bills Dashboard
-            </h1>
+          <h1 className="text-[26px] font-medium tracking-tight text-gray-900">
+          Bills Dashboard
+          </h1>
 
-            <p className="text-sm text-gray-500 mt-1">
-              Restaurant sales overview &
-              analytics
-            </p>
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-
-  <input
-    type="number"
-    placeholder="Tax %"
-    value={tax}
-    onChange={(e) =>
-      setTax(e.target.value)
-    }
-    className="h-[40px] w-[90px] px-3 border border-gray-300 bg-white text-sm font-semibold outline-none focus:border-black"
-  />
-
-  <button
-    onClick={saveTax}
-    className="h-[40px] px-4 bg-black text-white text-sm font-semibold hover:bg-gray-900"
-  >
-    Save Tax
-  </button>
-
-</div>
-
-            {/* FILTER */}
-            <select
-              value={filter}
-              onChange={(e) =>
-                setFilter(e.target.value)
-              }
-              className="h-[40px] px-4 border border-gray-300 bg-white text-sm font-semibold outline-none hover:border-black focus:border-black shadow-sm transition-all"
-            >
-              <option value="daily">
-                Daily
-              </option>
-
-              <option value="weekly">
-                Weekly
-              </option>
-
-              <option value="monthly">
-                Monthly
-              </option>
-
-            </select>
-
-            {/* PDF BUTTON */}
-            <button
-              onClick={downloadPDF}
-              className="h-[40px] px-5 bg-black text-white text-sm font-semibold hover:bg-gray-900 transition-all shadow-lg shadow-black/10 active:scale-[0.98]"
-            >
-              Download PDF
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* STATS */}
-     
-<div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-
-  {/* REVENUE */}
-  <div className="relative overflow-hidden bg-gradient-to-br from-black to-gray-800 text-white p-4 shadow-lg h-[120px]">
-
-    <div className="absolute right-0 top-0 w-20 h-20 bg-white/5 rounded-full -mr-8 -mt-8"></div>
-
-    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-300 font-semibold">
-      Total Revenue
-    </p>
-
-    <h2 className="text-[26px] font-normal mt-2 truncate">
-      Rs {totalSales}
-    </h2>
-
-    <div className="mt-3 flex items-center justify-between">
-
-      <span className="text-[10px] text-green-400 font-semibold">
-        +12.4%
-      </span>
-
-      <span className="text-[10px] text-gray-300">
-        {filter.toUpperCase()}
-      </span>
-
-    </div>
-
-  </div>
-
-  {/* ORDERS */}
-  <div className="relative overflow-hidden bg-white border border-gray-200 p-4 shadow-md h-[120px]">
-
-    <div className="absolute right-0 top-0 w-16 h-16 bg-blue-50 rounded-full -mr-6 -mt-6"></div>
-
-    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">
-      Total Orders
-    </p>
-
-    <h2 className="text-[26px] font-medium text-black mt-2">
-      {totalOrders}
-    </h2>
-
-    <div className="mt-3 flex items-center justify-between">
-
-      <span className="text-[10px] text-blue-600 font-semibold">
-        ACTIVE SALES
-      </span>
- 
-      <span className="w-2 h-2 bg-blue-600"></span>
-
-    </div>
-
-  </div>
-
-  {/* ITEMS */}
-  <div className="relative overflow-hidden bg-white border border-gray-200 p-4 shadow-md h-[120px]">
-
-    <div className="absolute right-0 top-0 w-16 h-16 bg-orange-50 rounded-full -mr-6 -mt-6"></div>
-
-    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">
-      Items Sold
-    </p>
-
-    <h2 className="text-[26px] font-medium text-black mt-2">
-      {totalItems}
-    </h2>
-
-    <div className="mt-3 flex items-center justify-between">
-
-      <span className="text-[10px] text-orange-600 font-semibold">
-        QUANTITY SOLD
-      </span>
-
-      <span className="w-2 h-2 bg-orange-500"></span>
-
-    </div>
-
-  </div>
-
-</div>
-
-      {/* EMPTY */}
-      {filteredBills.length === 0 ? (
-
-        <div className="bg-white border border-gray-200 shadow-sm p-10 text-center">
-
-          <h2 className="text-xl font-bold text-gray-800">
-            No Bills Found
-          </h2>
-
-          <p className="text-sm text-gray-400 mt-2">
-            No sales available for this
-            filter
+          <p className="text-sm text-gray-500 mt-1">
+            Restaurant sales overview &
+            analytics
           </p>
 
         </div>
 
-      ) : (
+        {/* RIGHT */}
+        <div className="flex flex-wrap items-center gap-3">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="flex items-center gap-3">
 
-          {filteredBills.map((bill) => (
+            {/* TAX SECTION */}
+            <div className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-2 shadow-sm">
 
-            <div
-              key={bill._id}
-              className="bg-white border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-            >
+              {/* CASH TAX */}
+              <div className="flex flex-col">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  Cash Tax
+                </label>
 
-              {/* CARD HEADER */}
-              {/* HEADER */}
-<div className="border-b border-gray-200 px-3 py-2 bg-gradient-to-r from-[#fafafa] to-white">
+                <input
+                  type="number"
+                  placeholder="%"
+                  value={cashTax}
+                  onChange={(e) =>
+                    setCashTax(e.target.value)
+                  }
+                  className="h-[38px] w-[110px] px-3 border border-gray-300 bg-gray-50 text-sm font-semibold outline-none focus:border-black transition-all"
+                />
+              </div>
 
-  <div className="flex items-start justify-between">
+              {/* CARD TAX */}
+              <div className="flex flex-col">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  Card Tax
+                </label>
 
-    <div>
+                <input
+                  type="number"
+                  placeholder="%"
+                  value={cardTax}
+                  onChange={(e) =>
+                    setCardTax(e.target.value)
+                  }
+                  className="h-[38px] w-[110px] px-3 border border-gray-300 bg-gray-50 text-sm font-semibold outline-none focus:border-black transition-all"
+                />
+              </div>
 
-      <p className="text-[9px] uppercase tracking-[0.15em] text-gray-400 font-semibold">
-        Table
-      </p>
-
-      <h2 className="text-[16px] font-medium text-black mt-0.5">
-        # {bill.tableNo}
-      </h2>
-
-    </div>
-
-    <div className="text-right">
-
-      <p className="text-[10px] text-gray-500">
-        {formatDate(bill.createdAt).date}
-      </p>
-
-      <p className="text-[9px] text-gray-400 mt-0.5">
-        {formatDate(bill.createdAt).time}
-      </p>
-
-    </div>
-
-  </div>
-
-</div>
-
-{/* BODY */}
-<div className="p-3">
-
-  {/* ITEMS */}
-  <div className="max-h-[150px] overflow-y-auto pr-1">
-
-    {bill.items?.map((item, index) => (
-
-      <div
-        key={index}
-        className="flex items-start justify-between"
-      >
-
-        <div className="min-w-0">
-
-          <h3 className="text-[12px] font-medium text-gray-800 truncate">
-            {item.name}
-          </h3>
-
-          <p className="text-[10px] text-gray-400">
-            Qty: {item.quantity}
-          </p>
-
-        </div>
-
-        <div className="text-right flex-shrink-0 ml-2">
-
-          <p className="text-[12px] font-semibold text-black">
-            Rs {item.price * item.quantity}
-          </p>
-
-        </div>
-
-      </div>
-
-    ))}
-
-  </div>
-
-  {/* TOTAL */}
-  {/* BILL SUMMARY */}
-<div className="mt-3 pt-3 border-t border-gray-200 ">
-
-  {/* SUBTOTAL */}
-  <div className="flex items-center justify-between">
-
-    <p className="text-[11px] text-gray-500 font-medium">
-      Subtotal
-    </p>
-
-    <span className="text-[12px] font-medium text-black">
-      Rs {bill.subtotal?.toFixed(2)}
-    </span>
-
-  </div>
-
-  {/* TAX */}
-  <div className="flex items-center justify-between">
-
-    <p className="text-[11px] text-gray-500 font-medium">
-      Tax ({bill.taxPercentage}%)
-    </p>
-
-    <span className="text-[11px] font-medium text-black">
-      Rs {bill.taxAmount?.toFixed(2)}
-    </span>
-
-  </div>
-
-  {/* GRAND TOTAL */}
-  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-
-    <p className="text-[11px] font-semibold text-gray-700">
-      Grand Total
-    </p>
-
-    <span className="text-[18px] text-black font-medium">
-      Rs {bill.totalAmount?.toFixed(2)}
-    </span>
-
-  </div>
-
-</div>
-
-</div>
+              {/* SAVE BUTTON */}
+              <button
+                onClick={saveTax}
+                className="mt-[18px] h-[38px] px-5 bg-black text-white text-sm font-semibold border border-black hover:bg-white hover:text-black transition-all"
+              >
+                Save
+              </button>
 
             </div>
-          ))}
+
+            
+       {/* FILTER + PDF */}
+<div className="bg-white border border-gray-200 px-3 py-2 shadow-sm">
+
+  <div className="flex items-end gap-3">
+
+    {/* FILTER */}
+    <div className="flex flex-col">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+        Income Filter
+      </label>
+
+      <select
+        value={filter}
+        onChange={(e) =>
+          setFilter(e.target.value)
+        }
+        className="h-[38px] w-[140px] px-4 border border-gray-300 bg-white text-sm font-semibold outline-none hover:border-black focus:border-black transition-all"
+      >
+        <option value="daily">
+          Daily
+        </option>
+
+        <option value="weekly">
+          Weekly
+        </option>
+
+        <option value="monthly">
+          Monthly
+        </option>
+
+      </select>
+    </div>
+
+    {/* PDF BUTTON */}
+    <button
+      onClick={downloadPDF}
+      className="h-[38px] px-5 bg-black text-white text-xs font-semibold border border-black hover:bg-white hover:text-black transition-all active:scale-[0.98]"
+    >
+      Download PDF
+    </button>
+
+  </div>
+
+</div>
+
+          </div>
 
         </div>
 
-      )}
+      </div>
 
     </div>
-  );
+
+    {/* STATS */}
+     
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+
+      {/* REVENUE */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-black to-gray-800 text-white p-4 shadow-lg h-[120px]">
+
+        <div className="absolute right-0 top-0 w-20 h-20 bg-white/5 rounded-full -mr-8 -mt-8"></div>
+
+        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-300 font-semibold">
+          Total Revenue
+        </p>
+
+        <h2 className="text-[26px] font-normal mt-2 truncate">
+          Rs {totalSales}
+        </h2>
+
+        <div className="mt-3 flex items-center justify-between">
+
+          <span className="text-[10px] text-green-400 font-semibold">
+            +12.4%
+          </span>
+
+          <span className="text-[10px] text-gray-300">
+            {filter.toUpperCase()}
+          </span>
+
+        </div>
+
+      </div>
+
+      {/* ORDERS */}
+      <div className="relative overflow-hidden bg-white border border-gray-200 p-4 shadow-md h-[120px]">
+
+        <div className="absolute right-0 top-0 w-16 h-16 bg-blue-50 rounded-full -mr-6 -mt-6"></div>
+
+        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">
+          Total Orders
+        </p>
+
+        <h2 className="text-[26px] font-medium text-black mt-2">
+          {totalOrders}
+        </h2>
+
+        <div className="mt-3 flex items-center justify-between">
+
+          <span className="text-[10px] text-blue-600 font-semibold">
+            ACTIVE SALES
+          </span>
+ 
+          <span className="w-2 h-2 bg-blue-600"></span>
+
+        </div>
+
+      </div>
+
+      {/* ITEMS */}
+      <div className="relative overflow-hidden bg-white border border-gray-200 p-4 shadow-md h-[120px]">
+
+        <div className="absolute right-0 top-0 w-16 h-16 bg-orange-50 rounded-full -mr-6 -mt-6"></div>
+
+        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">
+          Items Sold
+        </p>
+
+        <h2 className="text-[26px] font-medium text-black mt-2">
+          {totalItems}
+        </h2>
+
+        <div className="mt-3 flex items-center justify-between">
+
+          <span className="text-[10px] text-orange-600 font-semibold">
+            QUANTITY SOLD
+          </span>
+
+          <span className="w-2 h-2 bg-orange-500"></span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* EMPTY */}
+    {filteredBills.length === 0 ? (
+
+      <div className="bg-white border border-gray-200 shadow-sm p-10 text-center">
+
+        <h2 className="text-xl font-bold text-gray-800">
+          No Bills Found
+        </h2>
+
+        <p className="text-sm text-gray-400 mt-2">
+          No sales available for this
+          filter
+        </p>
+
+      </div>
+
+    ) : (
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        {filteredBills.map((bill) => (
+
+          <div
+            key={bill._id}
+            className="bg-white border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+          >
+
+            {/* HEADER */}
+            <div className="border-b border-gray-200 px-3 py-2 bg-gradient-to-r from-[#fafafa] to-white">
+
+              <div className="flex items-start justify-between">
+
+                <div>
+
+                  <p className="text-[9px] uppercase tracking-[0.15em] text-gray-400 font-semibold">
+                    Table
+                  </p>
+
+                  <h2 className="text-[16px] font-medium text-black mt-0.5">
+                    # {bill.tableNo}
+                  </h2>
+
+                </div>
+
+                <div className="text-right">
+
+                  <p className="text-[10px] text-gray-500">
+                    {formatDate(bill.createdAt).date}
+                  </p>
+
+                  <p className="text-[9px] text-gray-400 mt-0.5">
+                    {formatDate(bill.createdAt).time}
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* BODY */}
+            <div className="p-3">
+
+              {/* ITEMS */}
+              <div className="max-h-[150px] overflow-y-auto pr-1">
+
+                {bill.items?.map((item, index) => (
+
+                  <div
+                    key={index}
+                    className="flex items-start justify-between"
+                  >
+
+                    <div className="min-w-0">
+
+                      <h3 className="text-[12px] font-medium text-gray-800 truncate">
+                        {item.name}
+                      </h3>
+
+                      <p className="text-[10px] text-gray-400">
+                        Qty: {item.quantity}
+                      </p>
+
+                    </div>
+
+                    <div className="text-right flex-shrink-0 ml-2">
+
+                      <p className="text-[12px] font-semibold text-black">
+                        Rs {item.price * item.quantity}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+              {/* BILL SUMMARY */}
+              <div className="mt-3 pt-3 border-t border-gray-200 ">
+
+                {/* SUBTOTAL */}
+                <div className="flex items-center justify-between">
+
+                  <p className="text-[11px] text-gray-500 font-medium">
+                    Subtotal
+                  </p>
+
+                  <span className="text-[12px] font-medium text-black">
+                    Rs {bill.subtotal?.toFixed(2)}
+                  </span>
+
+                </div>
+
+                {/* TAX */}
+                <div className="flex items-center justify-between">
+
+                  <p className="text-[11px] text-gray-500 font-medium">
+                    Tax ({bill.taxPercentage}%)
+                  </p>
+
+                  <span className="text-[11px] font-medium text-black">
+                    Rs {bill.taxAmount?.toFixed(2)}
+                  </span>
+
+                </div>
+
+                {/* GRAND TOTAL */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+
+                  <p className="text-[11px] font-semibold text-gray-700">
+                    Grand Total
+                  </p>
+
+                  <span className="text-[18px] text-black font-medium">
+                    Rs {bill.totalAmount?.toFixed(2)}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+
+    )}
+
+  </div>
+);
 };
 
 export default AdminBills;

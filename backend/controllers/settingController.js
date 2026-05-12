@@ -1,53 +1,70 @@
 import Setting from "../models/Setting.js";
 
-// GET TAX
+// GET TAXES
 export const getTax = async (req, res) => {
   try {
 
     let setting = await Setting.findOne();
 
     if (!setting) {
+
       setting = await Setting.create({
-        taxPercentage: 0,
+        cashTax: 0,
+        cardTax: 0,
       });
+
     }
 
     res.json(setting);
 
   } catch (error) {
+
     res.status(500).json({
       message: error.message,
     });
+
   }
 };
 
-// UPDATE TAX
+// UPDATE TAXES
 export const updateTax = async (
   req,
   res
 ) => {
+
   try {
 
-    const { taxPercentage } = req.body;
+    const {
+      cashTax,
+      cardTax,
+    } = req.body;
 
     let setting = await Setting.findOne();
 
     if (!setting) {
+
       setting = await Setting.create({
-        taxPercentage,
+        cashTax,
+        cardTax,
       });
+
     } else {
-      setting.taxPercentage =
-        taxPercentage;
+
+      setting.cashTax = cashTax;
+      setting.cardTax = cardTax;
 
       await setting.save();
+
     }
 
     res.json(setting);
 
   } catch (error) {
+
     res.status(500).json({
       message: error.message,
     });
+
   }
+
 };

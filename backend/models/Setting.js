@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
 
 const settingSchema = new mongoose.Schema({
-  taxPercentage: {
+  cashTax: {
+    type: Number,
+    default: 0,
+  },
+
+  cardTax: {
     type: Number,
     default: 0,
   },
