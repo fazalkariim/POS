@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import PrintBill from "./pages/cashier/PrintBill";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -57,13 +58,21 @@ function App() {
               path="/cashier/bills"
               element={<CashierBills />}
             />
-
           </Route>
+
+          {/* PRINT BILL */}
+          <Route
+            path="/cashier/print/:id"
+            element={<PrintBill />}
+          />
 
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
 
         </Routes>
+      
+          
+        
 
       </BrowserRouter>
     </AuthProvider>

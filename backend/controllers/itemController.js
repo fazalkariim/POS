@@ -1,4 +1,5 @@
 import Item from "../models/Item.js";
+import Category from "../models/Category.js";
 
 // ➕ CREATE
 export const createItem = async (req, res) => {
@@ -15,7 +16,14 @@ export const createItem = async (req, res) => {
 
 // 📥 GET ALL
 export const getItems = async (req, res) => {
-  const items = await Item.find();
+  const categories = await Category.find().select("_id");
+
+  const validCategoryIds = categories.map((c) => c._id);
+
+  const items = await Item.find({
+    category: { $in: validCategoryIds },
+  });
+
   res.json(items);
 };
 

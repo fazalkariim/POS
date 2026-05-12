@@ -1,4 +1,6 @@
 import Category from "../models/Category.js";
+import Item from "../models/Item.js";
+
 
 export const createCategory = async (req, res) => {
   const { name } = req.body;
@@ -35,9 +37,14 @@ export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // delete category
     await Category.findByIdAndDelete(id);
 
-    res.json({ message: "Category deleted successfully" });
+    // delete related items
+    await Item.deleteMany({ category: id });
+
+    res.json({ message: "Category and related items deleted" });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

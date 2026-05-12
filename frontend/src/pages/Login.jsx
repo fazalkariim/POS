@@ -181,7 +181,22 @@ const Login = () => {
               ? "Logging in..."
               : "Login"}
           </button>
+{/* REGISTER LINK */}
+<div className="text-center mt-5">
 
+  <p className="text-sm text-gray-600">
+    Don&apos;t have an account?{" "}
+
+    <span
+      onClick={() => navigate("/register")}
+      className="text-black font-semibold cursor-pointer hover:underline"
+    >
+      Register
+    </span>
+
+  </p>
+
+</div>
         </form>
 
       </div>

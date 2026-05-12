@@ -6,6 +6,7 @@ import autoTable from "jspdf-autotable";
 const AdminBills = () => {
   const [bills, setBills] = useState([]);
   const [filter, setFilter] = useState("daily");
+  const [tax, setTax] = useState(0);
 
   // FETCH BILLS
   const fetchBills = async () => {
@@ -17,18 +18,37 @@ const AdminBills = () => {
     }
   };
 
+  const fetchTax = async () => {
+  try {
+
+    const { data } =
+      await API.get("/settings");
+
+    setTax(data.taxPercentage || 0);
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
   useEffect(() => {
-    fetchBills();
+    fetchBills()
+    fetchTax();
 
     const interval = setInterval(fetchBills, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
-  // SAFE FORMATTER
+    return () => clearInterval(interval);
+  }, []); 
+
+  // DATE FORMAT
   const formatDate = (date) => {
     const d = new Date(date);
+
     if (isNaN(d.getTime())) {
-      return { date: "Invalid Date", time: "--" };
+      return {
+        date: "--",
+        time: "--",
+      };
     }
 
     return {
@@ -37,65 +57,82 @@ const AdminBills = () => {
     };
   };
 
-  // FILTER LOGIC
-const filteredBills = useMemo(() => {
-  const now = new Date();
+  // FILTER BILLS
+  const filteredBills = useMemo(() => {
+    const now = new Date();
 
-  const startOfDay = (date) => {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
 
-  const startOfMonth = (date) => {
-    const d = new Date(date);
-    d.setDate(1);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - 6);
+    startOfWeek.setHours(0, 0, 0, 0);
 
-  const nowTime = now.getTime();
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-  let startTime = 0;
+    return bills
+      .filter((bill) => {
+        const billDate = new Date(bill.createdAt);
 
-  if (filter === "daily") {
-    startTime = startOfDay(now).getTime();
-  }
+        if (filter === "daily") {
+          return billDate >= startOfDay;
+        }
 
-  if (filter === "weekly") {
-    const d = new Date();
-    d.setDate(d.getDate() - 6); // ✅ last 7 days INCLUDING today
-    d.setHours(0, 0, 0, 0);
-    startTime = d.getTime();
-  }
+        if (filter === "weekly") {
+          return billDate >= startOfWeek;
+        }
 
-  if (filter === "monthly") {
-    startTime = startOfMonth(now).getTime();
-  }
+        if (filter === "monthly") {
+          return billDate >= startOfMonth;
+        }
 
-  return bills
-    .filter((bill) => {
-      if (!bill.createdAt) return false;
-
-      const billTime = new Date(bill.createdAt).getTime();
-
-      if (isNaN(billTime)) return false;
-
-      return billTime >= startTime && billTime <= nowTime;
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
-    );
-}, [bills, filter]);
+        return true;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt) -
+          new Date(a.createdAt)
+      );
+  }, [bills, filter]);
 
   // TOTAL SALES
   const totalSales = filteredBills.reduce(
-    (acc, bill) => acc + Number(bill.totalAmount || 0),
+    (acc, bill) =>
+      acc + Number(bill.totalAmount || 0),
     0
   );
 
-  // PDF DOWNLOAD
+  // TOTAL ORDERS
+  const totalOrders = filteredBills.length;
+
+  // TOTAL ITEMS
+  const totalItems = filteredBills.reduce(
+    (acc, bill) =>
+      acc +
+      bill.items.reduce(
+        (sum, item) =>
+          sum + Number(item.quantity || 0),
+        0
+      ),
+    0
+  );
+  const saveTax = async () => {
+  try {
+
+    await API.put("/settings", {
+      taxPercentage: tax,
+    });
+
+    alert("Tax Updated");
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+  // DOWNLOAD PDF
   const downloadPDF = () => {
     if (filteredBills.length === 0) {
       alert("No bills available");
@@ -105,10 +142,14 @@ const filteredBills = useMemo(() => {
     const doc = new jsPDF();
 
     doc.setFontSize(18);
-    doc.text(`${filter.toUpperCase()} SALES REPORT`, 14, 15);
+
+    doc.text(
+      `${filter.toUpperCase()} SALES REPORT`,
+      14,
+      18
+    );
 
     const tableData = [];
-    let totalItems = 0;
 
     filteredBills.forEach((bill) => {
       tableData.push([
@@ -118,137 +159,371 @@ const filteredBills = useMemo(() => {
         formatDate(bill.createdAt).date,
         formatDate(bill.createdAt).time,
       ]);
-
-      totalItems += bill.items.length;
     });
 
     autoTable(doc, {
-      head: [["Table", "Items", "Amount", "Date", "Time"]],
+      head: [
+        [
+          "Table",
+          "Items",
+          "Amount",
+          "Date",
+          "Time",
+        ],
+      ],
       body: tableData,
-      startY: 25,
+      startY: 28,
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [0, 0, 0],
+      },
     });
 
-    const finalY = doc.lastAutoTable?.finalY || 30;
+    const finalY =
+      doc.lastAutoTable?.finalY || 40;
 
-    doc.text(`Total Bills: ${filteredBills.length}`, 14, finalY + 10);
-    doc.text(`Total Items Sold: ${totalItems}`, 14, finalY + 18);
-    doc.text(`Total Sales: Rs ${totalSales}`, 14, finalY + 26);
+    doc.setFontSize(12);
+
+    doc.text(
+      `Total Orders: ${totalOrders}`,
+      14,
+      finalY + 10
+    );
+
+    doc.text(
+      `Items Sold: ${totalItems}`,
+      14,
+      finalY + 18
+    );
+
+    doc.text(
+      `Total Revenue: Rs ${totalSales}`,
+      14,
+      finalY + 26
+    );
 
     doc.save(`${filter}-sales-report.pdf`);
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-[#eef1f5] p-4">
 
       {/* HEADER */}
-      <div className="flex flex-wrap gap-4 justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm">
+      <div className="bg-white/90 backdrop-blur-md border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.06)] px-5 py-4 mb-4">
 
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Admin Bills Dashboard
-          </h1>
-          <p className="text-sm text-gray-500">
-            Sales overview & reports
-          </p>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+          {/* LEFT */}
+          <div>
+
+            <h1 className="text-[26px] font-black tracking-tight text-gray-900">
+              Admin Bills Dashboard
+            </h1>
+
+            <p className="text-sm text-gray-500 mt-1">
+              Restaurant sales overview &
+              analytics
+            </p>
+
+          </div>
+
+          {/* RIGHT */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+
+  <input
+    type="number"
+    placeholder="Tax %"
+    value={tax}
+    onChange={(e) =>
+      setTax(e.target.value)
+    }
+    className="h-[40px] w-[90px] px-3 border border-gray-300 bg-white text-sm font-semibold outline-none focus:border-black"
+  />
+
+  <button
+    onClick={saveTax}
+    className="h-[40px] px-4 bg-black text-white text-sm font-semibold hover:bg-gray-900"
+  >
+    Save Tax
+  </button>
+
+</div>
+
+            {/* FILTER */}
+            <select
+              value={filter}
+              onChange={(e) =>
+                setFilter(e.target.value)
+              }
+              className="h-[40px] px-4 border border-gray-300 bg-white text-sm font-semibold outline-none hover:border-black focus:border-black shadow-sm transition-all"
+            >
+              <option value="daily">
+                Daily
+              </option>
+
+              <option value="weekly">
+                Weekly
+              </option>
+
+              <option value="monthly">
+                Monthly
+              </option>
+
+            </select>
+
+            {/* PDF BUTTON */}
+            <button
+              onClick={downloadPDF}
+              className="h-[40px] px-5 bg-black text-white text-sm font-semibold hover:bg-gray-900 transition-all shadow-lg shadow-black/10 active:scale-[0.98]"
+            >
+              Download PDF
+            </button>
+
+          </div>
+
         </div>
 
-        {/* TOTAL SALES */}
-        <div className="bg-green-100 px-6 py-3 rounded-xl text-center min-w-[170px]">
-          <p className="text-sm text-gray-600 font-medium">
-            {filter.charAt(0).toUpperCase() + filter.slice(1)} Sales
-          </p>
-          <p className="text-2xl font-bold text-green-700">
-            Rs {totalSales}
-          </p>
-        </div>
-
-        {/* DROPDOWN FILTER */}
-        <div className="bg-gray-100 px-4 py-3 rounded-xl">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="bg-transparent outline-none text-sm font-medium"
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </div>
-
-        {/* PDF BUTTON */}
-        <button
-          onClick={downloadPDF}
-          className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition-all text-sm font-medium"
-        >
-          Download PDF
-        </button>
       </div>
 
-      {/* EMPTY STATE */}
+      {/* STATS */}
+     
+<div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+
+  {/* REVENUE */}
+  <div className="relative overflow-hidden bg-gradient-to-br from-black to-gray-800 text-white p-4 shadow-lg h-[120px]">
+
+    <div className="absolute right-0 top-0 w-20 h-20 bg-white/5 rounded-full -mr-8 -mt-8"></div>
+
+    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-300 font-semibold">
+      Total Revenue
+    </p>
+
+    <h2 className="text-[26px] font-normal mt-2 truncate">
+      Rs {totalSales}
+    </h2>
+
+    <div className="mt-3 flex items-center justify-between">
+
+      <span className="text-[10px] text-green-400 font-semibold">
+        +12.4%
+      </span>
+
+      <span className="text-[10px] text-gray-300">
+        {filter.toUpperCase()}
+      </span>
+
+    </div>
+
+  </div>
+
+  {/* ORDERS */}
+  <div className="relative overflow-hidden bg-white border border-gray-200 p-4 shadow-md h-[120px]">
+
+    <div className="absolute right-0 top-0 w-16 h-16 bg-blue-50 rounded-full -mr-6 -mt-6"></div>
+
+    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">
+      Total Orders
+    </p>
+
+    <h2 className="text-[26px] font-medium text-black mt-2">
+      {totalOrders}
+    </h2>
+
+    <div className="mt-3 flex items-center justify-between">
+
+      <span className="text-[10px] text-blue-600 font-semibold">
+        ACTIVE SALES
+      </span>
+ 
+      <span className="w-2 h-2 bg-blue-600"></span>
+
+    </div>
+
+  </div>
+
+  {/* ITEMS */}
+  <div className="relative overflow-hidden bg-white border border-gray-200 p-4 shadow-md h-[120px]">
+
+    <div className="absolute right-0 top-0 w-16 h-16 bg-orange-50 rounded-full -mr-6 -mt-6"></div>
+
+    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500 font-semibold">
+      Items Sold
+    </p>
+
+    <h2 className="text-[26px] font-medium text-black mt-2">
+      {totalItems}
+    </h2>
+
+    <div className="mt-3 flex items-center justify-between">
+
+      <span className="text-[10px] text-orange-600 font-semibold">
+        QUANTITY SOLD
+      </span>
+
+      <span className="w-2 h-2 bg-orange-500"></span>
+
+    </div>
+
+  </div>
+
+</div>
+
+      {/* EMPTY */}
       {filteredBills.length === 0 ? (
-        <div className="bg-white rounded-xl p-10 text-center shadow">
-          <h2 className="text-xl font-semibold text-gray-700">
+
+        <div className="bg-white border border-gray-200 shadow-sm p-10 text-center">
+
+          <h2 className="text-xl font-bold text-gray-800">
             No Bills Found
           </h2>
+
+          <p className="text-sm text-gray-400 mt-2">
+            No sales available for this
+            filter
+          </p>
+
         </div>
+
       ) : (
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
           {filteredBills.map((bill) => (
+
             <div
               key={bill._id}
-              className="bg-white rounded-xl shadow border overflow-hidden hover:shadow-lg transition-all"
+              className="bg-white border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
             >
 
+              {/* CARD HEADER */}
               {/* HEADER */}
-              <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-                <h2 className="font-semibold">
-                  Table #{bill.tableNo}
-                </h2>
+<div className="border-b border-gray-200 px-3 py-2 bg-gradient-to-r from-[#fafafa] to-white">
 
-                <div className="text-right">
-                  <p className="text-xs text-blue-100">
-                    {formatDate(bill.createdAt).date}
-                  </p>
-                  <p className="text-xs text-blue-200">
-                    {formatDate(bill.createdAt).time}
-                  </p>
-                </div>
-              </div>
+  <div className="flex items-start justify-between">
 
-              {/* BODY */}
-              <div className="p-4">
+    <div>
 
-                <div className="space-y-2 max-h-[160px] overflow-y-auto">
+      <p className="text-[9px] uppercase tracking-[0.15em] text-gray-400 font-semibold">
+        Table
+      </p>
 
-                  {bill.items?.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between text-sm border-b pb-1"
-                    >
-                      <span className="truncate">
-                        {item.name} × {item.quantity}
-                      </span>
+      <h2 className="text-[16px] font-medium text-black mt-0.5">
+        # {bill.tableNo}
+      </h2>
 
-                      <span className="text-green-600 font-semibold whitespace-nowrap">
-                        Rs {item.price * item.quantity}
-                      </span>
-                    </div>
-                  ))}
+    </div>
 
-                </div>
+    <div className="text-right">
 
-                <div className="border-t mt-3 pt-2 flex justify-between font-bold">
-                  <span>Total</span>
-                  <span>Rs {bill.totalAmount}</span>
-                </div>
+      <p className="text-[10px] text-gray-500">
+        {formatDate(bill.createdAt).date}
+      </p>
 
-              </div>
+      <p className="text-[9px] text-gray-400 mt-0.5">
+        {formatDate(bill.createdAt).time}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+{/* BODY */}
+<div className="p-3">
+
+  {/* ITEMS */}
+  <div className="max-h-[150px] overflow-y-auto pr-1">
+
+    {bill.items?.map((item, index) => (
+
+      <div
+        key={index}
+        className="flex items-start justify-between"
+      >
+
+        <div className="min-w-0">
+
+          <h3 className="text-[12px] font-medium text-gray-800 truncate">
+            {item.name}
+          </h3>
+
+          <p className="text-[10px] text-gray-400">
+            Qty: {item.quantity}
+          </p>
+
+        </div>
+
+        <div className="text-right flex-shrink-0 ml-2">
+
+          <p className="text-[12px] font-semibold text-black">
+            Rs {item.price * item.quantity}
+          </p>
+
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+
+  {/* TOTAL */}
+  {/* BILL SUMMARY */}
+<div className="mt-3 pt-3 border-t border-gray-200 ">
+
+  {/* SUBTOTAL */}
+  <div className="flex items-center justify-between">
+
+    <p className="text-[11px] text-gray-500 font-medium">
+      Subtotal
+    </p>
+
+    <span className="text-[12px] font-medium text-black">
+      Rs {bill.subtotal?.toFixed(2)}
+    </span>
+
+  </div>
+
+  {/* TAX */}
+  <div className="flex items-center justify-between">
+
+    <p className="text-[11px] text-gray-500 font-medium">
+      Tax ({bill.taxPercentage}%)
+    </p>
+
+    <span className="text-[11px] font-medium text-black">
+      Rs {bill.taxAmount?.toFixed(2)}
+    </span>
+
+  </div>
+
+  {/* GRAND TOTAL */}
+  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+
+    <p className="text-[11px] font-semibold text-gray-700">
+      Grand Total
+    </p>
+
+    <span className="text-[18px] text-black font-medium">
+      Rs {bill.totalAmount?.toFixed(2)}
+    </span>
+
+  </div>
+
+</div>
+
+</div>
 
             </div>
           ))}
 
         </div>
+
       )}
 
     </div>

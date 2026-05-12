@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const billSchema = new mongoose.Schema(
   {
     tableNo: { type: Number, required: true },
-   items: [
+   items: [ 
   {
     itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
     name: String,
@@ -11,6 +11,9 @@ const billSchema = new mongoose.Schema(
     quantity: Number,
   },
 ],
+    subtotal: Number,
+    taxPercentage: Number,
+    taxAmount: Number,
     totalAmount: Number,
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
