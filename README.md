@@ -1,24 +1,97 @@
-# Restaurant POS System 🍽️
+# 🍽️ Restaurant POS System
 
-A modern Restaurant Point of Sale (POS) System built to manage restaurant operations efficiently.
+A modern full-stack Restaurant POS (Point of Sale) Management System built using the MERN Stack.  
+This system helps restaurants manage orders, billing, sales analytics, menu items, categories, cashier operations, and tax-based billing with a clean and professional UI.
 
-## Features
+---
 
-- Order Management
-- Billing System
-- Menu Management
-- Table Management
-- Sales Tracking
-- User Authentication
-- Responsive Dashboard
-- Inventory Management
+# 🚀 Features
 
-## Tech Stack
+## 🔐 Authentication & Authorization
+- Admin Login
+- Cashier Login
+- JWT Authentication
+- Protected Routes
+- Role-Based Access Control
 
-- Frontend: React / Next.js
-- Backend: Node.js / Express
-- Database: MongoDB
-- Styling: Tailwind CSS / CSS
+---
+
+# 👨‍💼 Admin Panel
+
+## 📊 Dashboard
+- Daily Sales
+- Weekly Sales
+- Monthly Sales
+- Revenue Analytics
+- Total Orders
+- Total Items Sold
+
+## 🍔 Menu Management
+- Add Categories
+- Edit Categories
+- Delete Categories
+- Add Menu Items
+- Edit Items
+- Delete Items
+
+## 💰 Tax Management
+- Separate Cash Tax
+- Separate Card Tax
+- Dynamic Tax Configuration
+
+## 🧾 Bills Management
+- View All Bills
+- Filter Bills
+- Sales Reports
+- PDF Report Download
+
+---
+
+# 👨‍🍳 Cashier Panel
+
+## 🛒 POS Billing System
+- Add Items to Cart
+- Quantity Management
+- Table Number Management
+- Payment Method Selection
+  - Cash
+  - Card
+
+## 💵 Smart Tax System
+- Cash Payments → Higher Tax
+- Card Payments → Lower Tax
+- Automatic Tax Calculation
+
+## 🖨️ Receipt Printing
+- Professional POS Receipt
+- Auto Print Support
+- Thermal Printer Friendly Layout
+
+---
+
+# 🧠 Technologies Used
+
+## Frontend
+- React.js
+- Tailwind CSS
+- React Router DOM
+- Axios
+- React Hot Toast
+
+## Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JWT Authentication
+
+## Database
+- MongoDB Compass
+
+## PDF & Printing
+- jsPDF
+- jspdf-autotable
+
 
 ## Installation
 
