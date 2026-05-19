@@ -14,8 +14,10 @@ const Menu = () => {
   const [tableNo, setTableNo] = useState("");
 
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+
   const [cashTax, setCashTax] = useState(0);
   const [cardTax, setCardTax] =useState(0);
+  const [serviceTax, setServiceTax] = useState(0);
 
   const navigate = useNavigate();
 
@@ -128,21 +130,21 @@ const Menu = () => {
   0
 );
 
-
-
 const appliedTax =
   paymentMethod === "Cash"
     ? cashTax
     : cardTax;
 
 const taxAmount =
-  (subtotal * Number(appliedTax)) /
-  100;
+  (subtotal * Number(appliedTax)) / 100;
+
+const serviceTaxAmount =
+  (subtotal * Number(serviceTax)) / 100;
 
 const total =
-  subtotal + taxAmount;
-
-
+  subtotal +
+  taxAmount +
+  serviceTaxAmount;
 
   const fetchTax = async () => {
   try {
@@ -152,6 +154,7 @@ const total =
 
     setCashTax(data.cashTax || 0);
     setCardTax(data.cardTax || 0);
+    setServiceTax(data.serviceTax || 0);
 
   } catch (error) {
     console.log(error);
@@ -182,8 +185,12 @@ const total =
             items: cart,
             subtotal,
             taxPercentage: appliedTax,
-            paymentMethod,
             taxAmount,
+
+            serviceTaxPercentage: serviceTax,
+            serviceTaxAmount,
+
+            paymentMethod,
             totalAmount: total,
           }
         );
@@ -483,13 +490,24 @@ const total =
     {/* TAX */}
     <div className="flex items-center justify-between">
       <span className="text-sm text-gray-500">
-        Tax ({appliedTax}%)
+        GST ({appliedTax}%)
       </span>
 
       <span className="text-sm font-semibold">
         Rs {taxAmount.toFixed(2)}
       </span>
     </div>
+
+    {/* SERVICE TAX */}
+<div className="flex items-center justify-between">
+  <span className="text-sm text-gray-500">
+    Service Tax ({serviceTax}%)
+  </span>
+
+  <span className="text-sm font-semibold">
+    Rs {serviceTaxAmount.toFixed(2)}
+  </span>
+</div>
 
     {/* TOTAL */}
     <div className="flex items-center justify-between pt-2 border-t border-gray-200">

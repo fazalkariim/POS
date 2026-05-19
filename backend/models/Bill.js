@@ -17,6 +17,8 @@ const billSchema = new mongoose.Schema(
     subtotal: Number,
     taxPercentage: Number,
     taxAmount: Number,
+    serviceTaxPercentage: Number,
+    serviceTaxAmount: Number,
     totalAmount: Number,
     paymentMethod: {
     type: String,

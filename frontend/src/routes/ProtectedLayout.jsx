@@ -8,7 +8,7 @@ import { AuthContext } from "../context/AuthContext";
 
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+// import Footer from "../components/Footer";
 
 const ProtectedLayout = ({ role }) => {
   const { user, loading } =
@@ -61,7 +61,7 @@ const ProtectedLayout = ({ role }) => {
         </main>
 
         {/* FOOTER */}
-        <Footer />
+        {/* <Footer /> */}
 
       </div>
 

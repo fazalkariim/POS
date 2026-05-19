@@ -11,7 +11,8 @@ export const getTax = async (req, res) => {
       setting = await Setting.create({
         cashTax: 0,
         cardTax: 0,
-      });
+        serviceTax: 0,
+      });  
 
     }
 
@@ -37,6 +38,7 @@ export const updateTax = async (
     const {
       cashTax,
       cardTax,
+      serviceTax,
     } = req.body;
 
     let setting = await Setting.findOne();
@@ -46,12 +48,14 @@ export const updateTax = async (
       setting = await Setting.create({
         cashTax,
         cardTax,
+        serviceTax,
       });
 
     } else {
 
       setting.cashTax = cashTax;
       setting.cardTax = cardTax;
+      setting.serviceTax = serviceTax;
 
       await setting.save();
 

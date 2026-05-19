@@ -40,15 +40,6 @@ const PrintBill = () => {
     0
   );
 
-  // DISCOUNT
-  // const discount = Math.round(
-  //   bill.totalAmount * 0.12
-  // );
-
-  // // NET
-  // const netAmount =
-  //   bill.totalAmount - discount;
-
   // DATE
   const date = new Date(
     bill.createdAt
@@ -66,52 +57,65 @@ const PrintBill = () => {
   return (
     <>
       {/* PRINT STYLE */}
-     <style>
-  {`
-    @media print {
+      <style>
+        {`
+        @media print {
 
-      body {
-        margin: 0;
-        padding: 0;
-        background: white;
-      }
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
 
-      body * {
-        visibility: hidden;
-      }
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    -webkit-print-color-adjust: exact;
+  }
 
-      .print-area,
-      .print-area * {
-        visibility: visible;
-      }
+  body * {
+    visibility: hidden;
+  }
 
-      .print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-      } 
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
 
-      .no-print {
-        display: none;
-      }
-    }
-  `}
-</style>
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 68mm;
+    padding: 2mm;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
 
-      <div className="bg-white flex justify-center py-4">
+  * {
+    word-break: break-word;
+  }
+
+  .no-print {
+    display: none;
+  }
+}
+        `}
+      </style>
+
+      <div className="bg-white flex justify-center py-2">
 
         {/* BILL */}
-        <div className="print-area w-[340px] bg-white text-black p-4 font-mono">
+        <div className="print-area w-[250px] bg-white text-black p-1 font-mono">
 
-          {/* LOGO / HEADER */}
+          {/* HEADER */}
           <div className="text-center">
 
-            <h1 className="text-[42px] leading-none tracking-tight">
-              Puff N' Stuff
+            <h1 className="text-[22px] font-bold leading-none tracking-tight">
+              Bayroute
             </h1>
 
-            <p className="text-[16px] mt-3 leading-5">
+            <p className="text-[10px] mt-2 leading-4">
               Premium Pavillion Sector C2
               <br />
               Bahria Enclave Islamabad
@@ -122,44 +126,44 @@ const PrintBill = () => {
           </div>
 
           {/* DATE SECTION */}
-          <div className="border-2 border-black mt-5">
+          <div className="border border-black mt-3">
 
             {/* TOP */}
-            <div className="grid grid-cols-3 text-[20px] border-b border-dashed border-black">
+            <div className="grid grid-cols-3 text-[9px] border-b border-dashed border-black">
 
-              <div className="p-2 border-r border-dashed border-black text-center">
+              <div className="p-1 border-r border-dashed border-black text-center">
                 {date}
               </div>
 
-              <div className="p-2 border-r border-dashed border-black text-center">
+              <div className="p-1 border-r border-dashed border-black text-center">
                 {time}
               </div>
 
-              <div className="p-2 text-center font-bold">
+              <div className="p-1 text-center font-bold">
                 POS
               </div>
 
             </div>
 
             {/* SECOND */}
-            <div className="grid grid-cols-3 text-[12px] font-bold">
+            <div className="grid grid-cols-3 text-[9px] font-bold border-b border-black">
 
-              <div className="p-2 border-r border-black text-center">
+              <div className="p-1 border-r border-black text-center">
                 Bill:
                 {String(
                   bill._id.slice(-3)
                 ).padStart(3, "0")}
               </div>
 
-              <div className="p-2 border-r border-black text-center">
+              <div className="p-1 border-r border-black text-center">
                 Chq :
                 {Math.floor(
                   100000 +
-                    Math.random() * 900000
+                  Math.random() * 900000
                 )}
               </div>
 
-              <div className="p-2 text-center">
+              <div className="p-1 text-center">
                 Table:
                 {bill.tableNo}
               </div>
@@ -167,49 +171,49 @@ const PrintBill = () => {
             </div>
 
             {/* TABLE HEAD */}
-            <div className="grid grid-cols-4 border-t-2  border-b-2 border-black text-[16px] font-bold">
+            <div className="grid grid-cols-4 border-b border-black text-[10px] font-bold">
 
-              <div className="p-2 col-span-1">
-                Description
+              <div className="p-1 col-span-1">
+                Item
               </div>
 
-              <div className="p-2 text-center">
+              <div className="p-1 text-center">
                 Rate
               </div>
 
-              <div className="p-2 text-center">
+              <div className="p-1 text-center">
                 Qty
               </div>
 
-              <div className="p-2 text-right">
-                Value
+              <div className="p-1 text-right">
+                Total
               </div>
 
             </div>
 
             {/* ITEMS */}
-            <div className="min-h-[180px]">
+            <div className="min-h-[120px]">
 
               {bill.items.map(
                 (item, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-4 text-[15px]"
+                    className="grid grid-cols-4 text-[9px]"
                   >
 
-                    <div className="p-2 break-words font-bold">
+                    <div className="p-1 break-words font-bold">
                       {item.name}
                     </div>
 
-                    <div className="p-2 text-center">
+                    <div className="p-1 text-center">
                       {item.price.toFixed(2)}
                     </div>
 
-                    <div className="p-2 text-center">
-                      {item.quantity}.00
+                    <div className="p-1 text-center">
+                      {item.quantity}
                     </div>
 
-                    <div className="p-2 text-right">
+                    <div className="p-1 text-right">
                       {(
                         item.price *
                         item.quantity
@@ -225,68 +229,80 @@ const PrintBill = () => {
           </div>
 
           {/* TOTAL */}
-          <div className="mt-4">
+          <div className="mt-3">
 
-  {/* SUBTOTAL */}
-  <div className="flex justify-between text-[16px]">
+            {/* SUBTOTAL */}
+            <div className="flex justify-between text-[10px]">
 
-    <span>Subtotal</span>
+              <span>Subtotal</span>
 
-    <span>
-      {bill.subtotal?.toFixed(2)}
-    </span>
+              <span>
+                {bill.subtotal?.toFixed(2)}
+              </span>
 
-  </div>
+            </div>
 
-  {/* TAX */}
-  <div className="flex justify-between text-[16px] mt-2">
+            {/* TAX */}
+            <div className="flex justify-between text-[10px] mt-1">
 
-    <span>
-      Tax ({bill.taxPercentage}%)
-    </span>
+              <span>
+                GST({bill.taxPercentage}%)
+              </span>
 
-    <span>
-      {bill.taxAmount?.toFixed(2)}
-    </span>
+              <span>
+                {bill.taxAmount?.toFixed(2)}
+              </span>
 
-  </div>
+            </div>
+            {/* SERVICE TAX */}
+<div className="flex justify-between text-[10px] mt-1">
 
-  {/* GRAND TOTAL */}
-  <div className="flex justify-between items-center border-t border-black mt-3 pt-2">
+  <span>
+    Service Tax({bill.serviceTaxPercentage || 0}%)
+  </span>
 
-    <h2 className="text-[28px] font-bold">
-      Total
-    </h2>
-
-    <h2 className="text-[32px] font-bold">
-      {bill.totalAmount?.toFixed(2)}
-    </h2>
-
-  </div>
+  <span>
+    {bill.serviceTaxAmount?.toFixed(2) || "0.00"}
+  </span>
 
 </div>
 
-          {/* FOOTER */}
-          <div className="mt-6 text-center">
+            {/* TOTAL ITEMS */}
+            <div className="flex justify-between text-[10px] mt-1">
 
-            <p className="text-[12px] uppercase leading-5">
-              RUPEES ONLY
-            </p>
+              <span>Total Items</span>
 
-            <p className="text-[11px] mt-4">
-              Software Provided by ShahnaynLabs
-              0317-9001036
-            </p>
+              <span>{totalQty}</span>
+
+            </div>
+
+            {/* GRAND TOTAL */}
+            <div className="flex justify-between items-center border-t border-black mt-2 pt-2">
+
+              <h2 className="text-[16px] font-bold">
+                TOTAL
+              </h2>
+
+              <h2 className="text-[18px] font-bold">
+                Rs {bill.totalAmount?.toFixed(2)}
+              </h2>
+
+            </div>
 
           </div>
 
-          {/* BUTTON */}
-          {/* <button
-            onClick={() => window.print()}
-            className="no-print mt-6 w-full bg-black text-white py-3 rounded-lg text-sm"
-          >
-            Print Bill
-          </button> */}
+          {/* FOOTER */}
+          <div className="mt-3 text-center">
+
+            <p className="text-[9px] uppercase leading-4">
+              Thanks For Visit...
+            </p>
+
+            <p className="text-[8px] mt-2">
+              Software Provided by @ShahnaynLabs
+            </p>
+
+          </div>
 
         </div>
 

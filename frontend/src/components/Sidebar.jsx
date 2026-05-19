@@ -26,7 +26,7 @@ const Sidebar = () => {
             <div className="bg-white text-black rounded-none p-4 shadow-lg text-center border border-gray-300">
 
               <h1 className="text-2xl font-extrabold tracking-wide">
-                POS System
+                Bayroute
               </h1>
 
               <p className="text-xs font-semibold text-gray-600 mt-1 uppercase tracking-wider">
@@ -105,6 +105,18 @@ const Sidebar = () => {
         </div>
 
       </div>
+      {/* FOOTER TEXT */}
+<div className="mt-auto pt-10 border-t border-gray-800 text-center text-gray-400 text-xs">
+
+  <p className="font-semibold tracking-wide">
+    ShahnaynLabs © 2026
+  </p>
+
+  <p className="mt-1 text-gray-500">
+    Built for modern restaurant operations
+  </p>
+
+</div>
     </div>
   );
 };

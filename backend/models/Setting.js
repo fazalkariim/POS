@@ -10,9 +10,13 @@ const settingSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  serviceTax: {
+    type: Number,
+    default: 0,
+  },
 });
 
 export default mongoose.model(
   "Setting",
   settingSchema
-);
+); 

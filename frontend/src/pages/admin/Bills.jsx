@@ -9,6 +9,7 @@ const AdminBills = () => {
 
   const [cashTax, setCashTax] = useState(0);
   const [cardTax, setCardTax] =useState(0);
+  const [serviceTax, setServiceTax] = useState(0);
 
   // FETCH BILLS
   const fetchBills = async () => {
@@ -28,6 +29,7 @@ const AdminBills = () => {
 
     setCashTax(data.cashTax || 0);
     setCardTax(data.cardTax || 0);
+    setServiceTax(data.serviceTax || 0);
 
   } catch (error) {
     console.log(error);
@@ -128,6 +130,7 @@ const AdminBills = () => {
    await API.put("/settings", {
       cashTax,
       cardTax,
+      serviceTax,
     });
 
     alert("Tax Updated");
@@ -277,6 +280,23 @@ const AdminBills = () => {
                 />
               </div>
 
+              {/* SERVICE TAX */}
+              <div className="flex flex-col">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  Service Tax
+                </label>
+              
+                <input
+                  type="number"
+                  placeholder="%"
+                  value={serviceTax}
+                  onChange={(e) =>
+                    setServiceTax(e.target.value)
+                  }
+                  className="h-[38px] w-[110px] px-3 border border-gray-300 bg-gray-50 text-sm font-semibold outline-none focus:border-black transition-all"
+                />
+              </div>
+
               {/* SAVE BUTTON */}
               <button
                 onClick={saveTax}
@@ -300,7 +320,7 @@ const AdminBills = () => {
       </label>
 
       <select
-        value={filter}
+        value={filter} 
         onChange={(e) =>
           setFilter(e.target.value)
         }
@@ -550,6 +570,18 @@ const AdminBills = () => {
                     Rs {bill.taxAmount?.toFixed(2)}
                   </span>
 
+                </div>
+                {/* SERVICE TAX */}
+                <div className="flex items-center justify-between">
+                
+                  <p className="text-[11px] text-gray-500 font-medium">
+                    Service Tax ({bill.serviceTaxPercentage || 0}%)
+                  </p>
+                
+                  <span className="text-[11px] font-medium text-black">
+                    Rs {bill.serviceTaxAmount?.toFixed(2) || "0.00"}
+                  </span>
+                
                 </div>
 
                 {/* GRAND TOTAL */}
