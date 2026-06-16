@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../services/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const Menu = () => {
   const [categories, setCategories] = useState([]);
@@ -20,6 +21,9 @@ const Menu = () => {
   const [serviceTax, setServiceTax] = useState(0);
 
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const editBill = location.state?.editBill;
 
   // FETCH CATEGORIES
   const fetchCategories = async () => {
@@ -56,6 +60,14 @@ const Menu = () => {
     fetchItems();
     fetchTax();;
   }, []);
+
+  useEffect(() => {
+  if (editBill) {
+    setCart(editBill.items);
+    setTableNo(editBill.tableNo);
+    toast.success("Editing previous bill");
+  }
+}, [editBill]);
 
   // FILTER ITEMS
   const filteredItems = items.filter((item) => {
@@ -163,64 +175,59 @@ const total =
 
   // GENERATE BILL
   const generateBill = async () => {
-    try {
-      if (!tableNo) {
-        toast.error(
-          "Table number is required"
-        );
-        return;
-      }
-
-      if (cart.length === 0) {
-        toast.error(
-          "Add at least 1 item"
-        );
-        return;
-      }
-
-     const res = await API.post(
-          "/bills",
-          {
-            tableNo: Number(tableNo),
-            items: cart,
-            subtotal,
-            taxPercentage: appliedTax,
-            taxAmount,
-
-            serviceTaxPercentage: serviceTax,
-            serviceTaxAmount,
-
-            paymentMethod,
-            totalAmount: total,
-          }
-        );
-        
-        toast.success(
-          "Bill Generated Successfully"
-        );
-        
-        navigate(
-          `/cashier/print/${res.data._id}`
-        );
-        
-        setCart([]);
-        setTableNo("");
-
-      toast.success(
-        "Bill Generated Successfully"
-      );
-
-      setCart([]);
-      setTableNo("");
-
-    } catch (error) {
-      console.log(error);
-
-      toast.error(
-        "Bill generation failed"
-      );
+  try {
+    if (!tableNo) {
+      toast.error("Table number is required");
+      return;
     }
-  };
+
+    if (cart.length === 0) {
+      toast.error("Add at least 1 item");
+      return;
+    }
+
+    const payload = {
+      tableNo: Number(tableNo),
+      items: cart,
+      subtotal,
+      taxPercentage: appliedTax,
+      taxAmount,
+      serviceTaxPercentage: serviceTax,
+      serviceTaxAmount,
+      paymentMethod,
+      totalAmount: total,
+    };
+
+    let res;
+
+    // 🔥 IF EDIT MODE
+    if (editBill) {
+      payload.parentBillId = editBill._id;
+      payload.version = (editBill.version || 1) + 1;
+      payload.status = "active";
+
+      res = await API.post("/bills", payload);
+    } 
+    else {
+      res = await API.post("/bills", payload);
+    }
+
+    toast.success("Bill Generated Successfully");
+
+    navigate(`/cashier/print/${res.data._id}`, {
+  state: {
+    clearCart: true,
+  },
+});
+
+    setCart([]);
+    setTableNo("");
+
+  } catch (error) {
+    console.log(error);
+    toast.error("Bill generation failed");
+  }
+};
 
  return (
   <div className="min-h-screen bg-[#eef1f5] p-4 flex gap-4">

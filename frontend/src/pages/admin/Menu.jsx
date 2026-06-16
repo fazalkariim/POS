@@ -263,13 +263,6 @@ const Menu = () => {
 
                 </div>
 
-                {/* <div className="w-9 h-9 bg-black text-white flex items-center justify-center font-black text-sm">
-
-                  {cat.name
-                    ?.charAt(0)
-                    ?.toUpperCase()}
-
-                </div> */}
 
               </div>
 
@@ -279,10 +272,7 @@ const Menu = () => {
             <div className="p-3">
 
               <div>
-
-                {/* <h3 className="text-sm font-semibold text-gray-800">
-                  Manage Items
-                </h3> */}
+ 
 
                 <p className="text-[11px] text-gray-400 mt-1">
                   Open category menu

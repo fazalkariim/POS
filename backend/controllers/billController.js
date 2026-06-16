@@ -7,32 +7,33 @@ export const createBill = async (req, res) => {
     console.log("BODY:", req.body);
     console.log("USER:", req.user);
 
-  const {
+ const {
   tableNo,
   items,
   subtotal,
   taxPercentage,
   taxAmount,
-
   serviceTaxPercentage,
   serviceTaxAmount,
-
   totalAmount,
   paymentMethod,
+  parentBillId,
+  version,
 } = req.body;
 
   const bill = await Bill.create({
-  tableNo, 
+  tableNo,
   items,
   subtotal,
   taxPercentage,
   taxAmount,
-
   serviceTaxPercentage,
   serviceTaxAmount,
-  
   totalAmount,
   paymentMethod,
+  parentBillId: parentBillId || null,
+  version: version || 1,
+  status: "active",
   createdBy: req.user?._id || null,
 });
 
@@ -63,5 +64,26 @@ export const getSingleBill = async (req, res) => {
     res.status(500).json({
       message: error.message,
     });
+  }
+};
+// 🧾 VOID BILL
+export const voidBill = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const bill = await Bill.findById(id);
+
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    bill.status = "void";
+    await bill.save();
+
+    res.json({ message: "Bill voided successfully" });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
   }
 };

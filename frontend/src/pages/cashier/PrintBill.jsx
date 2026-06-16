@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../../services/api";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const PrintBill = () => {
   const { id } = useParams();
 
   const [bill, setBill] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBill();
@@ -17,9 +20,17 @@ const PrintBill = () => {
       setBill(data);
 
       // AUTO PRINT
-      setTimeout(() => {
-        window.print();
-      }, 700);
+     setTimeout(() => {
+  window.print();
+
+  // 🔥 AFTER PRINT CLEAR MENU STATE
+  if (location.state?.clearCart) {
+    navigate("/cashier/menu", {
+      replace: true,
+      state: {},
+    });
+  }
+}, 700);
 
     } catch (error) {
       console.log(error);
@@ -112,15 +123,13 @@ const PrintBill = () => {
           <div className="text-center">
 
             <h1 className="text-[22px] font-bold leading-none tracking-tight">
-              Bayroute
+              BAYROUTE
             </h1>
 
             <p className="text-[10px] mt-2 leading-4">
-              Premium Pavillion Sector C2
+              Super market,F-6 markez Islamabad
               <br />
-              Bahria Enclave Islamabad
-              <br />
-              Phone # 0516134634
+              Phone # 03366662441
             </p>
 
           </div>
@@ -297,9 +306,9 @@ const PrintBill = () => {
             <p className="text-[9px] uppercase leading-4">
               Thanks For Visit...
             </p>
-
+ 
             <p className="text-[8px] mt-2">
-              Software Provided by @ShahnaynLabs
+              Software Provided by @ShawhanaynLabs
             </p>
 
           </div>

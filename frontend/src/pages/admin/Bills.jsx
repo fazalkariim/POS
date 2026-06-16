@@ -79,6 +79,7 @@ const AdminBills = () => {
 
     return bills
       .filter((bill) => {
+
         const billDate = new Date(bill.createdAt);
 
         if (filter === "daily") {
@@ -102,8 +103,10 @@ const AdminBills = () => {
       );
   }, [bills, filter]);
 
-  // TOTAL SALES
-  const totalSales = filteredBills.reduce(
+  // TOTAL SALES (WITHOUT VOID BILLS)
+const totalSales = filteredBills
+  .filter((bill) => bill.status !== "void")
+  .reduce(
     (acc, bill) =>
       acc + Number(bill.totalAmount || 0),
     0
@@ -157,38 +160,95 @@ const AdminBills = () => {
       18
     );
 
-    const tableData = [];
 
-    filteredBills.forEach((bill) => {
-      tableData.push([
-        bill.tableNo,
-        bill.items.length,
-        `Rs ${bill.totalAmount}`,
-        formatDate(bill.createdAt).date,
-        formatDate(bill.createdAt).time,
-      ]);
-    });
+  const tableData = [];
 
-    autoTable(doc, {
-      head: [
-        [
-          "Table",
-          "Items",
-          "Amount",
-          "Date",
-          "Time",
-        ],
-      ],
-      body: tableData,
-      startY: 28,
-      styles: {
-        fontSize: 10,
-        cellPadding: 3,
-      },
-      headStyles: {
-        fillColor: [0, 0, 0],
-      },
-    });
+filteredBills.forEach((bill) => {
+
+  let billStatus = "ACTIVE";
+
+  if (bill.status === "void") {
+    billStatus = "VOID";
+  }
+
+  if (bill.parentBillId) {
+    billStatus = "REVISED";
+  }
+
+  tableData.push([
+    bill.tableNo,
+    bill.items.length,
+    `Rs ${bill.totalAmount}`,
+    billStatus,
+    formatDate(bill.createdAt).date,
+    formatDate(bill.createdAt).time,
+  ]);
+});
+
+
+autoTable(doc, {
+  head: [
+    [
+      "Table",
+      "Items",
+      "Amount",
+      "Status",
+      "Date",
+      "Time",
+    ],
+  ],
+
+  body: tableData,
+
+  startY: 28,
+
+  styles: {
+    fontSize: 10,
+    cellPadding: 3,
+  },
+
+  headStyles: {
+    fillColor: [0, 0, 0],
+  },
+
+  didParseCell: function (data) {
+
+    // STATUS COLUMN
+    if (
+      data.section === "body" &&
+      data.column.index === 3
+    ) {
+
+      const status =
+        data.cell.raw;
+
+      // VOID = RED
+      if (status === "VOID") {
+
+        data.cell.styles.fillColor =
+          [255, 80, 80];
+
+        data.cell.styles.textColor =
+          [255, 255, 255];
+      }
+
+      // REVISED = GREEN
+      if (status === "REVISED") {
+
+        data.cell.styles.fillColor =
+          [0, 170, 90];
+
+        data.cell.styles.textColor =
+          [255, 255, 255];
+      }
+
+    }
+
+  },
+
+});
+    
+   
 
     const finalY =
       doc.lastAutoTable?.finalY || 40;
@@ -486,6 +546,18 @@ const AdminBills = () => {
                     # {bill.tableNo}
                   </h2>
 
+                  {bill.status === "void" && (
+  <span className="text-red-500 text-xs font-bold">
+    VOID
+  </span>
+)}
+
+{bill.parentBillId && (
+  <span className="text-blue-500 text-xs font-bold">
+    REVISED
+  </span>
+)}
+
                 </div>
 
                 <div className="text-right">
@@ -563,7 +635,7 @@ const AdminBills = () => {
                 <div className="flex items-center justify-between">
 
                   <p className="text-[11px] text-gray-500 font-medium">
-                    Tax ({bill.taxPercentage}%)
+                    GST ({bill.taxPercentage}%)
                   </p>
 
                   <span className="text-[11px] font-medium text-black">

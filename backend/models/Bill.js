@@ -6,6 +6,22 @@ const billSchema = new mongoose.Schema(
       type: Number, 
       required: true 
     },
+    status: {
+  type: String,
+  enum: ["active", "void", "revised"],
+  default: "active",
+},
+
+parentBillId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Bill",
+  default: null,
+},
+
+version: {
+  type: Number,
+  default: 1,
+},
    items: [ 
   {
     itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },

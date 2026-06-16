@@ -1,8 +1,25 @@
 import { useEffect, useState } from "react";
 import API from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Bills = () => {
   const [bills, setBills] = useState([]);
+  const navigate = useNavigate();
+  
+  const handleEditAndReprint = async (bill) => {
+  try {
+    // 1. VOID OLD BILL
+    await API.put(`/bills/void/${bill._id}`);
+
+    // 2. SEND DATA TO MENU FOR EDIT
+    navigate("/cashier/menu", {
+      state: { editBill: bill },
+    });
+
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   const fetchBills = async () => {
     try {
@@ -165,17 +182,16 @@ const Bills = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
-        {[...bills]
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt) -
-              new Date(a.createdAt)
-          )
-          .map((bill) => (
-
+       {[...bills]
+  .sort(
+    (a, b) =>
+      new Date(b.createdAt) -
+      new Date(a.createdAt)
+  )
+  .map((bill, index) => (
             <div
               key={bill._id}
-              className="bg-white border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+              className="bg-white border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 "
             >
 
               {/* CARD HEADER */}
@@ -270,10 +286,11 @@ const Bills = () => {
 
   </div>
 
+
   <div className="flex items-center justify-between mb-2">
 
     <p className="text-[11px] text-gray-500 font-medium">
-      Tax ({bill.taxPercentage}%)
+      GST ({bill.taxPercentage}%)
     </p>
 
     <span className="text-[11px] font-medium text-black">
@@ -281,6 +298,20 @@ const Bills = () => {
     </span>
 
   </div>
+  {/* SERVICE TAX */}
+<div className="flex items-center justify-between mb-2">
+
+  <p className="text-[11px] text-gray-500 font-medium">
+    Service Tax ({bill.serviceTaxPercentage || 0}%)
+  </p>
+
+  <span className="text-[11px] font-medium text-black">
+    Rs {bill.serviceTaxAmount?.toFixed(2) || "0.00"}
+  </span>
+
+</div>
+
+
 
   <div className="flex items-center justify-between pt-2 border-t border-gray-200">
 
@@ -305,6 +336,19 @@ const Bills = () => {
     </div>
 
   </div>
+
+  {index < 8 &&
+ bill.status !== "void" &&
+ !bill.parentBillId && (
+
+  <button
+    onClick={() => handleEditAndReprint(bill)}
+    className="w-full mt-3 h-[34px] bg-black text-white text-xs font-semibold hover:bg-gray-800 transition-all"
+  >
+    Edit & Reprint
+  </button>
+
+)}
 
 </div>
 
